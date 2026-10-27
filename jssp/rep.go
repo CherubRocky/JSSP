@@ -13,9 +13,11 @@ type Instance struct {
 }
 
 type Operation struct {
+	ID int
 	Machine int
 	Job int
 	Span int
+	NextMachine int // ID
 }
 
 type Job []Operation
