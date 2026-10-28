@@ -18,6 +18,9 @@ type Operation struct {
 	Job int
 	Span int
 	NextMachine int // ID
+	NextJob int
+	InDegree int
+	TEnd int
 }
 
 type Job []Operation
