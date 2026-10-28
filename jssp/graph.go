@@ -16,6 +16,7 @@ func JSSPDigraph(op []*Operation) *DiGraph {
 }
 
 func (dg *DiGraph) Makespan() (int, int) {
+	inDegrees := dg.inDegreeSlice()
 	q := &deque.Deque[*Operation]{}
 	for _, u := range dg.Ops {
 		if u.InDegree == 0 {
@@ -27,28 +28,26 @@ func (dg *DiGraph) Makespan() (int, int) {
 	dg.printG()
 	for q.Len() != 0 {
 		u := q.PopFront()
-		fmt.Printf("ID: %d, ", u.ID)
-		fmt.Printf("Span: %d, ", u.Span)
 		if u.NextJob != -1 {
 			dg.printG()
 			v := dg.Ops[u.NextJob - 1]
 			v.TEnd = max(v.TEnd, u.TEnd + v.Span)
-			v.InDegree--
-			if v.InDegree == 0 {
+			inDegrees[v.ID - 1]--
+			if inDegrees[v.ID - 1] == 0 {
 				q.PushBack(v)
 			}
 		}
 		if u.NextMachine != -1 {
 			v := dg.Ops[u.NextMachine - 1]
 			v.TEnd = max(v.TEnd, u.TEnd + v.Span)
-			v.InDegree--
-			if v.InDegree == 0 {
+			inDegrees[v.ID - 1]--
+			if inDegrees[v.ID - 1] == 0 {
 				q.PushBack(v)
 			}
 		}
 	}
 	makespan := dg.FindMax()
-	vic := dg.vInCicle()
+	vic := vInCicle(inDegrees)
 	return makespan, vic
 }
 
@@ -62,10 +61,18 @@ func (dg *DiGraph) FindMax() int {
 	return max
 }
 
-func (dg *DiGraph) vInCicle() int {
+func (dg *DiGraph) inDegreeSlice() []int {
+	s := make([]int, len(dg.Ops))
+	for i, v := range dg.Ops {
+		s[i] = v.InDegree
+	}
+	return s
+}
+
+func  vInCicle(inDegrees []int) int {
 	vic := 0
-	for _, v := range dg.Ops {
-		if v.InDegree > 0 {
+	for _, v := range inDegrees {
+		if v > 0 {
 			vic++
 		}
 	}
