@@ -7,7 +7,6 @@ import (
 
 type DiGraph struct {
 	Ops []*Operation
-	Machine []Operation
 }
 
 func JSSPDigraph(op []*Operation) *DiGraph {
