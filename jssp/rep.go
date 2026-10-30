@@ -1,57 +1,107 @@
 package jssp
 
 import (
-	"fmt"
+	//	"fmt"
+	"math/rand/v2"
+	"slices"
+	"sort"
 )
 
 type Instance struct {
-	Jobs int
-	Machines int
-	Ul int
-	Ll int
-	Jobss []Job
+	UB int // Upper bound
+	LB int // Lower bound
+	N int// number of jobs
+	M int// number of machines
+	OpsXJob int// number of operations per job
+	OpsXMach int// number of operations per machine
+	Jobs []Operation
+	Machines []Operation
+	rng *rand.Rand
 }
+
+func (ins *Instance) opsByMachine() []Operation {
+	machs := slices.Clone(ins.Jobs)
+	f := func(a, b Operation) int {
+		if a.Machine < b.Machine {
+			return -1
+		}
+		if a.Machine == b.Machine {
+			return 0
+		}
+		return 1
+	}
+	slices.SortStableFunc(machs, f)
+	return machs
+}
+
+func (ins *Instance) UpperBound() int {
+	sum := 0
+	for i, v := range ins.Jobs {
+		sum += v.Span
+	}
+	return sum
+}
+
+func (ins *Instance) LowerBound() int {
+	n := len(ins.Jobs) / ins.N
+	m := len(ins.Machs) / ins.M
+	return max(maxSlice(ins.Jobs, n), maxSlice(ins.Machs, m))
+}
+
+func maxSlice(s []Operation, n int) int {
+	maxVal := 0
+	partSum := 0
+	for i, v := range s {
+		if i % n == 0 {
+			maxVal = max(partSum, maxVal)
+			partSum = 0
+		}
+		partSum += s[i].Span
+	}
+	maxVal = max(partSum, max)
+	return maxVal
+}
+
+func (ins *Instance) RandomSol() []Operation {
+	sol := slices.Clone(ins.Jobs)
+	ins.connectJob(sol)
+	ins.connectMachine(sol)
+	return sol
+}
+
+func (ins *Instance) connectJob(op []Operation) {
+	opsJob := len(op) / ins.N
+	for i, v := range op {
+		if i % opsJob != opsJob - 1 {
+			op[i].NextJob = op[i].ID + 1
+			op[i + 1].InDegree += 1 
+		}
+	}
+}
+
+func (ins *Instance) connectMachine(op []Operation) {
+	opsMach := len(op) / ins.M
+	for i := 0; i < ins.M; i++ {
+		perm := ins.rng.Perm(opsMach)
+		for j, v := range perm {
+			if j < len(perm) - 1 {
+				actualInd := (i * opsMach) + v
+				nextActualInd := (i * opsMach) + perm[j + 1]
+				op[actualInd].NextMachine = op[nextActualInd].ID
+				op[nextActualInd].InDegree += 1
+			}
+		}
+	}
+}
+
 
 type Operation struct {
 	ID int
 	Machine int
 	Job int
 	Span int
-	NextMachine int // ID
-	NextJob int
+	NextMachine int // Id of nex machine in jobflow
+	NextJob int // Id of next operation in jobflow
 	InDegree int
 	TEnd int
-}
-
-type Job []Operation
-
-func (j Job) Equals(cmp Job) bool {
-	if len(j) != len(cmp) {
-		return false
-	}
-	for i, op := range j {
-		if op != cmp[i] {
-			return false
-		}
-	}
-	return true
-}
-
-func (i Instance) Equals(cmp Instance) bool {
-	if i.Ul == cmp.Ul && i.Ll == cmp.Ll && i.Jobs == cmp.Jobs && i.Machines == cmp.Machines {
-		if len(i.Jobss) != len(cmp.Jobss) {
-			return false
-		}
-		for i, jobcy := range i.Jobss {
-			if !jobcy.Equals(cmp.Jobss[i]) {
-				return false
-			}
-		}
-		return true
-	}
-	return false
-}
-
-func (i Instance) String() string {
-	return fmt.Sprintf("Upper Limit: %d, Lower Limit: %d, Jobs: %d, Machines: %d", i.Ul, i.Ll, i.Jobs, i.Machines)
 }
