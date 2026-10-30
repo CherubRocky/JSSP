@@ -1,19 +1,18 @@
-package cli
+package jssp
 
 import (
 	"errors"
 	"strconv"
 	"strings"
-	"github.com/CherubRocky/JSSP/jssp"
 )
 
 var ErrWrongData = errors.New("Found something that is not an int in the file")
-var ErrWrongHeaderFormat = errors.New("The number of arguments in header is different from four")
+var ErrWrongHeaderFormat = errors.New("The number of arguments in header is different from two")
 var ErrJobsMismatch = errors.New("The number of jobs declared don't match the number of jobs given (represented by lines)")
 var ErrNoContent = errors.New("The text is basically empty")
 
-func ParseJSSP(text string) (jssp.Instance, error) {
-	ins := jssp.Instance{}
+func ParseJSSP(text string) (Instance, error) {
+	ins := Instance{}
 	text = strings.TrimSpace(text)
 	rawLines := strings.Split(text, "\n")
 	var lines []string
@@ -27,36 +26,28 @@ func ParseJSSP(text string) (jssp.Instance, error) {
 		return ins, ErrNoContent
 	}
 	fLine := strings.Fields(lines[0])
-	if len(fLine) != 4 {
+	if len(fLine) != 2 {
 		return ins, ErrWrongHeaderFormat
 	}
 	var err error
 	
-	ins.Jobs, err = strconv.Atoi(fLine[0])
+	ins.N, err = strconv.Atoi(fLine[0])
 	if err != nil {
 		return ins, ErrWrongData
 	}
-	ins.Machines, err = strconv.Atoi(fLine[1])
-	if err != nil {
-		return ins, ErrWrongData
-	}
-	ins.Ul, err = strconv.Atoi(fLine[2])
-	if err != nil {
-		return ins, ErrWrongData
-	}
-	ins.Ll, err = strconv.Atoi(fLine[3])
+	ins.M, err = strconv.Atoi(fLine[1])
 	if err != nil {
 		return ins, ErrWrongData
 	}
 
-	if ins.Jobs != len(lines) - 1 {
+	if ins.N != len(lines) - 1 {
 		return ins, ErrJobsMismatch
 	}
 
-	jobsArr := make([]jssp.Job, 0, ins.Jobs)
+	jobsSlice := make([]Operation, 0, ins.N * ins.M)
+	counter := 0
 	for i := 1; i < len(lines); i++ {
 		iLine := strings.Fields(lines[i])
-		var iJob jssp.Job = make([]jssp.Operation, 0, 2 * ins.Jobs)
 		for j := 0; j < len(iLine); j += 2 {
 			mac, err := strconv.Atoi(iLine[j])
 			if err != nil {
@@ -66,11 +57,11 @@ func ParseJSSP(text string) (jssp.Instance, error) {
 			if err != nil {
 				return ins, ErrWrongData
 			}
-			op := jssp.Operation{mac, i, sp}
-			iJob = append(iJob, op)
+			op := Operation{ID: counter, Machine: mac, Job: i - 1, Span: sp}
+			jobsSlice = append(jobsSlice, op)
+			counter++
 		}
-		jobsArr = append(jobsArr, iJob)
 	}
-	ins.Jobss = jobsArr
+	ins.Jobs = jobsSlice
 	return ins, nil
 }

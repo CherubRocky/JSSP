@@ -1,10 +1,9 @@
 package jssp
 
 import (
-	//	"fmt"
 	"math/rand/v2"
 	"slices"
-	"sort"
+	"fmt"
 )
 
 type Instance struct {
@@ -12,11 +11,25 @@ type Instance struct {
 	LB int // Lower bound
 	N int// number of jobs
 	M int// number of machines
-	OpsXJob int// number of operations per job
-	OpsXMach int// number of operations per machine
+	OpsXJob int // number of operations per job
+	OpsXMach int // number of operations per machine
 	Jobs []Operation
 	Machines []Operation
 	rng *rand.Rand
+}
+
+func NewInstance(textInstance string, rng *rand.Rand) (*Instance, error) {
+	ins, err := ParseJSSP(textInstance)
+	if err != nil {
+		return nil, fmt.Errorf("Error creating instance. %w", err)
+	}
+	ins.rng = rng
+	ins.Machines = ins.opsByMachine()
+	ins.UB = ins.UpperBound()
+	ins.LB = ins.LowerBound()
+	ins.OpsXJob = len(ins.Jobs) / ins.N
+	ins.OpsXMach = len(ins.Machines) / ins.M
+	return &ins, nil
 }
 
 func (ins *Instance) opsByMachine() []Operation {
@@ -36,7 +49,7 @@ func (ins *Instance) opsByMachine() []Operation {
 
 func (ins *Instance) UpperBound() int {
 	sum := 0
-	for i, v := range ins.Jobs {
+	for _, v := range ins.Jobs {
 		sum += v.Span
 	}
 	return sum
@@ -44,21 +57,21 @@ func (ins *Instance) UpperBound() int {
 
 func (ins *Instance) LowerBound() int {
 	n := len(ins.Jobs) / ins.N
-	m := len(ins.Machs) / ins.M
-	return max(maxSlice(ins.Jobs, n), maxSlice(ins.Machs, m))
+	m := len(ins.Machines) / ins.M
+	return max(maxSlice(ins.Jobs, n), maxSlice(ins.Machines, m))
 }
 
 func maxSlice(s []Operation, n int) int {
 	maxVal := 0
 	partSum := 0
-	for i, v := range s {
+	for i, _ := range s {
 		if i % n == 0 {
 			maxVal = max(partSum, maxVal)
 			partSum = 0
 		}
 		partSum += s[i].Span
 	}
-	maxVal = max(partSum, max)
+	maxVal = max(partSum, maxVal)
 	return maxVal
 }
 
@@ -71,7 +84,7 @@ func (ins *Instance) RandomSol() []Operation {
 
 func (ins *Instance) connectJob(op []Operation) {
 	opsJob := len(op) / ins.N
-	for i, v := range op {
+	for i, _ := range op {
 		if i % opsJob != opsJob - 1 {
 			op[i].NextJob = op[i].ID + 1
 			op[i + 1].InDegree += 1 
@@ -100,7 +113,7 @@ type Operation struct {
 	Machine int
 	Job int
 	Span int
-	NextMachine int // Id of nex machine in jobflow
+	NextMachine int // Id of next machine in jobflow
 	NextJob int // Id of next operation in jobflow
 	InDegree int
 	TEnd int
