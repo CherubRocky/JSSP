@@ -90,6 +90,8 @@ func (ins *Instance) connectJob(op []*Operation) {
 		if i % opsJob != opsJob - 1 {
 			op[i].NextJob = op[i].ID + 1
 			op[i + 1].InDegree += 1 
+		} else {
+			op[i].NextJob = -1
 		}
 	}
 }
@@ -106,6 +108,9 @@ func (ins *Instance) connectMachine(op []*Operation) []*Operation {
 				nextActualInd := (i * opsMach) + perm[j + 1]
 				op[actualInd].NextMachine = op[nextActualInd].ID
 				op[nextActualInd].InDegree += 1
+			}
+			if j == len(perm) - 1 {
+				op[actualInd].NextMachine = -1
 			}
 			machs[counter] = op[actualInd]
 			counter++

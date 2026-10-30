@@ -1,5 +1,7 @@
 package jssp
 
+import "fmt"
+
 type Solution struct {
 	ins *Instance
 	digraph *DiGraph
@@ -15,7 +17,7 @@ func NewSolution(i *Instance, jobs, machs []*Operation) *Solution {
 }
 
 func (s *Solution) Cost() float64 {
-	if s.cost > -1 {
+	if s.cost > 0 {
 		return s.cost 
 	}
 	makespan, vic := s.digraph.Makespan()
@@ -23,9 +25,11 @@ func (s *Solution) Cost() float64 {
 	lb := float64(s.ins.LB)
 	ub := float64(s.ins.UB)
 	inCicle := float64(vic)
-	
+
 	c := (ms - lb) / (ub - lb) + lb * inCicle
 	s.cost = c
+
+	fmt.Printf("ms: %f, lb: %f, ub: %f, inCicle: %f\n", ms, lb, ub, inCicle)
 	return c
 }
 

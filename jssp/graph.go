@@ -15,32 +15,32 @@ func JSSPDigraph(op []*Operation) *DiGraph {
 }
 
 func (dg *DiGraph) Makespan() (int, int) {
+	for i, _ := range dg.Ops {
+		dg.Ops[i].TEnd = 0
+	}
 	inDegrees := dg.inDegreeSlice()
 	q := &deque.Deque[*Operation]{}
 	for _, u := range dg.Ops {
-		if u.InDegree == 0 {
+		if inDegrees[u.ID] == 0 {
 			q.PushBack(u)
 			u.TEnd = u.Span
-			fmt.Println(u.TEnd)
 		}
 	}
-	dg.printG()
 	for q.Len() != 0 {
 		u := q.PopFront()
 		if u.NextJob != -1 {
-			dg.printG()
-			v := dg.Ops[u.NextJob - 1]
+			v := dg.Ops[u.NextJob]
 			v.TEnd = max(v.TEnd, u.TEnd + v.Span)
-			inDegrees[v.ID - 1]--
-			if inDegrees[v.ID - 1] == 0 {
+			inDegrees[v.ID]--
+			if inDegrees[v.ID] == 0 {
 				q.PushBack(v)
 			}
 		}
 		if u.NextMachine != -1 {
-			v := dg.Ops[u.NextMachine - 1]
+			v := dg.Ops[u.NextMachine]
 			v.TEnd = max(v.TEnd, u.TEnd + v.Span)
-			inDegrees[v.ID - 1]--
-			if inDegrees[v.ID - 1] == 0 {
+			inDegrees[v.ID]--
+			if inDegrees[v.ID] == 0 {
 				q.PushBack(v)
 			}
 		}
