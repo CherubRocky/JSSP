@@ -75,14 +75,16 @@ func maxSlice(s []Operation, n int) int {
 	return maxVal
 }
 
-func (ins *Instance) RandomSol() []Operation {
-	sol := slices.Clone(ins.Jobs)
-	ins.connectJob(sol)
-	ins.connectMachine(sol)
-	return sol
+func (ins *Instance) RandomSol() *Solution {
+	x := make([]Operation, len(ins.Jobs))
+	copy(x, ins.Jobs)
+	jobSlice := pointerSlice(x)
+	ins.connectJob(jobSlice)
+	machSlice := ins.connectMachine(jobSlice)
+	return NewSolution(ins, jobSlice, machSlice)
 }
 
-func (ins *Instance) connectJob(op []Operation) {
+func (ins *Instance) connectJob(op []*Operation) {
 	opsJob := len(op) / ins.N
 	for i, _ := range op {
 		if i % opsJob != opsJob - 1 {
@@ -92,19 +94,32 @@ func (ins *Instance) connectJob(op []Operation) {
 	}
 }
 
-func (ins *Instance) connectMachine(op []Operation) {
+func (ins *Instance) connectMachine(op []*Operation) []*Operation {
+	machs := make([]*Operation, len(op))
 	opsMach := len(op) / ins.M
+	counter := 0
 	for i := 0; i < ins.M; i++ {
 		perm := ins.rng.Perm(opsMach)
 		for j, v := range perm {
+			actualInd := (i * opsMach) + v
 			if j < len(perm) - 1 {
-				actualInd := (i * opsMach) + v
 				nextActualInd := (i * opsMach) + perm[j + 1]
 				op[actualInd].NextMachine = op[nextActualInd].ID
 				op[nextActualInd].InDegree += 1
 			}
+			machs[counter] = op[actualInd]
+			counter++
 		}
 	}
+	return machs
+}
+
+func pointerSlice(op []Operation) []*Operation {
+	pSlice := make([]*Operation, len(op))
+	for i := range op {
+		pSlice[i] = &op[i]
+	}
+	return pSlice
 }
 
 
