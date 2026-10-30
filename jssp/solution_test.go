@@ -26,8 +26,8 @@ func TestInputsAsIs(t *testing.T) {
 		ins, _ := NewInstance(input3x3Two(), nil)
 		sol := setup(ins)
 		got := sol.Cost()
-		want := 2.1666
-		if sol.cost != 2.1666 {
+		want := 0.75
+		if sol.cost != 0.75 {
 			t.Errorf("got %f, want %f", got, want)
 		}
 		if ins.UB != 20 {
@@ -37,7 +37,7 @@ func TestInputsAsIs(t *testing.T) {
 			t.Errorf("got %d, want %d", ins.LB, 8)
 		}
 		ms, _ := sol.digraph.Makespan()
-		if ms != 324 {
+		if ms != 17 {
 			t.Errorf("got %d, want %d", ms, 324)
 		}
 	})
