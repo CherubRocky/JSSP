@@ -12,11 +12,11 @@ type Solution struct {
 func NewSolution(i *Instance, jobs, machs []*Operation) *Solution {
 	sol := &Solution{ins: i, machines: machs,}
 	sol.digraph = &DiGraph{jobs}
-	sol.Cost()
+	sol.ComputeCost()
 	return sol
 }
 
-func (s *Solution) Cost() float64 {
+func (s *Solution) ComputeCost() float64 {
 	makespan, vic := s.digraph.Makespan()
 	ms := float64(makespan)
 	lb := float64(s.ins.LB)
@@ -30,6 +30,13 @@ func (s *Solution) Cost() float64 {
 	return c
 }
 
+func (s *Solution) Cost() float64 {
+	if s.cost < 0 {
+		return s.ComputeCost()
+	}
+	return s.cost
+}
+
 func (s *Solution) Neighbour() *Solution {
 	neigh := s.clone()
 	machSelected := s.ins.rng.IntN(s.ins.M)
@@ -39,7 +46,7 @@ func (s *Solution) Neighbour() *Solution {
 		machOp2 = s.ins.rng.IntN(s.ins.OpsXMach)
 	}
 	neigh.swapMachine(machSelected, machOp1, machOp2)
-	neigh.Cost()
+	neigh.ComputeCost()
 	return neigh
 }
 
