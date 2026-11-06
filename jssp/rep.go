@@ -9,8 +9,8 @@ import (
 type Instance struct {
 	UB int // Upper bound
 	LB int // Lower bound
-	N int// number of jobs
-	M int// number of machines
+	N int // number of jobs
+	M int // number of machines
 	OpsXJob int // number of operations per job
 	OpsXMach int // number of operations per machine
 	Jobs []Operation
@@ -79,8 +79,14 @@ func (ins *Instance) RandomSol() *Solution {
 	x := make([]Operation, len(ins.Jobs))
 	copy(x, ins.Jobs)
 	jobSlice := pointerSlice(x)
-	ins.connectJob(jobSlice)
-	machSlice := ins.connectMachine(jobSlice)
+	machPointers := make([]*Operation, len(jobSlice))
+	copy(machPointers, jobSlice)
+	slices.SortStableFunc(machPointers, func(a, b *Operation) int {
+		if a.Machine < b.Machine { return -1 }
+		if a.Machine == b.Machine { return 0 }
+		return 1
+	})
+	machSlice := ins.connectMachine(machPointers)
 	return NewSolution(ins, jobSlice, machSlice)
 }
 

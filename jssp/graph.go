@@ -84,3 +84,34 @@ func (dg *DiGraph) printG() {
 	}
 	fmt.Println()
 }
+
+func (dg *DiGraph) clone() *DiGraph {
+	return &DiGraph{Ops: cloneOpSlice(dg.Ops)}
+}
+
+func cloneOpSlice(op []*Operation) []*Operation {
+	newOp := make([]*Operation, len(op))
+	for i, v := range op {
+		newOp[i] = v.clone()
+	}
+	return newOp
+}
+
+func (op *Operation) clone() *Operation {
+	return &Operation{
+		ID: op.ID,
+		Machine: op.Machine,
+		Job: op.Job,
+		Span: op.Span,
+		NextMachine: op.NextMachine,
+		NextJob: op.NextJob,
+		InDegree: op.InDegree,
+		TEnd: op.TEnd,
+	}
+}
+
+/*
+   Recordar que se están usando referencias a operation
+   para cambiar in situ las operaciones
+*/
+
