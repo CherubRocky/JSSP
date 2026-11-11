@@ -129,3 +129,65 @@ func (s *Solution) clone() *Solution {
 	return newSol
 }
 
+func (s *Solution) Fly() *Solution {
+	neigh := s.clone()
+	
+	machSelected := s.ins.rng.IntN(s.ins.M)
+	startIdx := machSelected * s.ins.OpsXMach
+
+	k := s.ins.OpsXMach / 3
+	if k < 2 {
+		k = 2 // if instance too small
+	}
+
+	// if OpsXMach too small, trivial swap
+	if s.ins.OpsXMach < 4 {
+		posA := s.ins.rng.IntN(s.ins.OpsXMach)
+		posB := s.ins.rng.IntN(s.ins.OpsXMach)
+		neigh.swapMachine(machSelected, posA, posB)
+		neigh.ComputeCost()
+		return neigh
+	}
+
+	// cherry pick start indexes
+	b1 := s.ins.rng.IntN(s.ins.OpsXMach - 2 * k + 1)
+	b2 := b1 + k + s.ins.rng.IntN(s.ins.OpsXMach - (b1 + k) - k + 1)
+
+	// swap
+	for i := 0; i < k; i++ {
+		tmp := neigh.machines[startIdx + b1 + i]
+		neigh.machines[startIdx + b1 + i] = neigh.machines[startIdx + b2 + i]
+		neigh.machines[startIdx + b2 + i] = tmp
+	}
+
+	neigh.reconfigureMachineBlock(machSelected)
+	
+	neigh.ComputeCost()
+
+	return neigh
+}
+
+func (s *Solution) reconfigureMachineBlock(mach int) {
+	start := mach * s.ins.OpsXMach
+	end := start + s.ins.OpsXMach
+
+	for i := start; i < end; i++ {
+		op := s.machines[i]
+
+		op.InDegree = 0
+		
+		if op.ID % s.ins.OpsXJob != 0 {
+			op.InDegree = 1
+		}
+
+		// connect to next op
+		if i < end-1 {
+			nextOp := s.machines[i+1]
+			op.NextMachine = nextOp.ID
+			nextOp.InDegree++
+		} else {
+			op.NextMachine = -1
+		}
+	}
+}
+
