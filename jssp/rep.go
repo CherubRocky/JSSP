@@ -13,7 +13,11 @@ type Instance struct {
 	M int // number of machines
 	OpsXJob int // number of operations per job
 	OpsXMach int // number of operations per machine
+	// Slice of operations ordered by jobs.
+	// E.g. if operations per job is 5, job 0 is in indexes 0 to 4 (inclusive)
 	Jobs []Operation
+	// Slice of operations ordered by machines.
+	// E.g. if operations per machine is 5, machine 0 is in indexes 0 to 4 (inclusive)
 	Machines []Operation
 	rng *rand.Rand
 }
@@ -32,6 +36,8 @@ func NewInstance(textInstance string, rng *rand.Rand) (*Instance, error) {
 	return &ins, nil
 }
 
+// opsByMachine returns the operations ordered by machines.
+// It is stable since all IDs in a machine are sequentially increasing
 func (ins *Instance) opsByMachine() []Operation {
 	machs := slices.Clone(ins.Jobs)
 	f := func(a, b Operation) int {
@@ -47,6 +53,8 @@ func (ins *Instance) opsByMachine() []Operation {
 	return machs
 }
 
+// UpperBound computes the instance's upper bound.
+// It is given by the sum of the span of every operation
 func (ins *Instance) UpperBound() int {
 	sum := 0
 	for _, v := range ins.Jobs {
@@ -55,6 +63,8 @@ func (ins *Instance) UpperBound() int {
 	return sum
 }
 
+// LowerBound computes the instance's lower bound.
+// It is given by the lowest total span of a job or a machine if it is executed uninterrupted
 func (ins *Instance) LowerBound() int {
 	n := len(ins.Jobs) / ins.N
 	m := len(ins.Machines) / ins.M
