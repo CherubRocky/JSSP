@@ -20,7 +20,7 @@ func main() {
 
 func run() error {
 	seed := flag.Uint64("seed", 4, "Usage: --seed <postive int>")
-	filePath := flag.String("file", "instances/40x40jssp.txt", "Usage: --file <path to file>")
+	filePath := flag.String("file", "instances/JSSP_50_20.txt", "Usage: --file <path to file>")
 	nests := flag.Int("nests", 20, "Usage: --nests <postive int>")
 	gens := flag.Int("gens", 500, "Usage: --gens <postive int>")
 	catchProb := flag.Float64("catch-prob", 0.2, "Usage: --gens <rational number in range [0, 1)>")
