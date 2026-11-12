@@ -7,16 +7,6 @@ import (
 	"os"
 )
 
-func main() {
-	momos := make([]byte, 1024)
-	for i, _ := range momos {
-		momos[i] = 'f'
-	}
-
-	fmt.Println(momos)
-
-}
-
 func MyReadFile(path string) (string, error) {
 	f, err := os.Open(path);
 	if err != nil {
